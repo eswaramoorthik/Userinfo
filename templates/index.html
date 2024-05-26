@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    tr, th, td{
+        border: 1px solid black;
+        padding: 10px;
+    }
+</style>
+<body>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Mob</th>
+            <th colspan="2">Action</th>
+        </tr>
+        {% for info in data %}
+        <tr>
+            <td>{{info.Name}}</td>
+            <td>{{info.Age}}</td>
+            <td>{{info.Mob}}</td>
+            <td><button><a href="{{url_for('edit', id = info._id)}}">Edit</a></button></td>
+            <td><button><a href="{{url_for('delete', id = info._id)}}">Delete</a></button></td>
+        </tr>
+        {% endfor %}
+    </table><br><br><br><br>
+    <button><a href="{{url_for('add')}}">Add Details</a></button>
+    <button><a href="{{url_for('logout')}}">Logout</a></button>
+
+</body>
+</html>
