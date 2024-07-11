@@ -1,36 +1,80 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
+{% extends 'base.html' %}
+
+{% block title %}Student Details{% endblock %}
+
+{% block body %}
 <style>
-    tr, th, td{
-        border: 1px solid black;
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    th, td {
+        border: 1px solid #dee2e6;
         padding: 10px;
+        text-align: center;
+    }
+    th {
+        background-color: #f8f9fa;
+    }
+    td button {
+        background: none;
+        border: none;
+        padding: 0;
+        font: inherit;
+        cursor: pointer;
+        text-decoration: underline;
+        color: #007bff;
+    }
+    td button:hover {
+        color: #0056b3;
+    }
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+    .action-buttons button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        text-decoration: none;
+    }
+    .action-buttons button:hover {
+        background-color: #0056b3;
     }
 </style>
-<body>
-    <table>
+
+<table class="table">
+    <thead class="thead-dark">
         <tr>
-            <th>Name</th>
-            <th>Age</th>
-            <th>Mob</th>
-            <th colspan="2">Action</th>
+            <th scope="col">Name</th>
+            <th scope="col">Age</th>
+            <th scope="col">Mobile</th>
+            <th scope="col">Email</th>
+            <th scope="col" colspan="2">Actions</th>
         </tr>
+    </thead>
+    <tbody>
         {% for info in data %}
         <tr>
-            <td>{{info.Name}}</td>
-            <td>{{info.Age}}</td>
-            <td>{{info.Mob}}</td>
-            <td><button><a href="{{url_for('edit', id = info._id)}}">Edit</a></button></td>
-            <td><button><a href="{{url_for('delete', id = info._id)}}">Delete</a></button></td>
+            <td>{{ info.Name }}</td>
+            <td>{{ info.Age }}</td>
+            <td>{{ info.Mob }}</td>
+            <td>{{ info.Email }}</td>
+            <td><button><a href="{{ url_for('edit', id=info._id) }}">Edit</a></button></td>
+            <td><button><a href="{{ url_for('delete', id=info._id) }}">Delete</a></button></td>
         </tr>
         {% endfor %}
-    </table><br><br><br><br>
-    <button><a href="{{url_for('add')}}">Add Details</a></button>
-    <button><a href="{{url_for('logout')}}">Logout</a></button>
+    </tbody>
+</table>
 
-</body>
-</html>
+<div class="action-buttons">
+    <button class="btn btn-primary"><a href="{{ url_for('add') }}" style="color: #fff;">Add Details</a></button>
+    <button class="btn btn-danger"><a href="{{ url_for('logout') }}" style="color: #fff;">Logout</a></button>
+</div>
+{% endblock %}

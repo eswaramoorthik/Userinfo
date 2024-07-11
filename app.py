@@ -19,13 +19,12 @@ db = client.School
 collection = db.student_details
 collection_signup = db.signup
 
-def isloggedin():
-    return 'name' in session
 
 class User:
     def __init__(self, username, password):
         self.username = username
         self.password = password
+
 
 def is_password_strong(password):
     if len(password) < 8 or \
@@ -37,36 +36,47 @@ def is_password_strong(password):
     return True
 
 
+from wtforms.validators import InputRequired, Length
+
 class signinform(FlaskForm):
     username = StringField('Username', validators=[InputRequired(), Length(min=4, max=20)])
     password = PasswordField('Password', validators=[InputRequired()])
-    submit = SubmitField('Signin')
-
+    submit = SubmitField('Sign Up')
 
 class loginform(FlaskForm):
     username = StringField('Username', validators=[InputRequired(), Length(min=4, max=20)])
     password = PasswordField('Password', validators=[InputRequired(), Length(min=8, max=15)])
     submit = SubmitField('Login')
 
+
+
 @app.route('/signup/', methods=['GET', 'POST'])
 def signup():
     form = signinform()
     if form.validate_on_submit():
-        username = form.username.data
+        username = form.username.data 
         password = form.password.data
+        
+        
         if not is_password_strong(password):
             flash('Password should be 8 characters long with upper case, lower case, and special characters.', 'danger')
             return redirect(url_for('signup'))
+        
         hashed_password = generate_password_hash(password)
 
-        old_user = collection_signup.find_one({"Name": username})
-        
+        old_user = collection_signup.find_one({"Username": username})
         if old_user:
             flash('Username already taken. Please choose a different one.', 'danger')
             return render_template('signup.html', form=form)
-        collection_signup.insert_one({"Username": username, "Password": hashed_password})
+        
+        collection_signup.insert_one({
+            "Username": username,          
+            "Password": hashed_password
+        })
+        
         flash('Signup Successful', 'success')
         return redirect(url_for('login'))
+    
     return render_template('signup.html', form=form)
 
 
@@ -76,64 +86,104 @@ def login():
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
+        
         login_detail = collection_signup.find_one({"Username": username})
         if login_detail and check_password_hash(login_detail["Password"], password):
-                user = User(username=login_detail["Username"], password=login_detail["Password"])
-                session['name'] = user.username
-                return redirect(url_for('table'))
+            user = User(username=login_detail["Username"], password=login_detail["Password"])
+            session['name'] = user.username
+            return redirect(url_for('table'))
+        
         flash('Invalid Credentials', 'danger')
+    
     return render_template('login.html', form=form)
+
 
 @app.route('/')
 def home():
-    return render_template('navbar.html')
+    return render_template('base.html')
+
 
 @app.route('/table/')
 def table():
-    data = collection.find({})
-    return render_template('index.html',  data = data)
+    if 'name' not in session:
+        flash('You need to be logged in to view the table.', 'danger')
+        return redirect(url_for('login'))
 
-@app.route('/add/', methods = ['GET', 'POST'])
+    username = session['name']
+    data = collection.find({"Username": username}) 
+    return render_template('index.html', data=data)
+
+
+@app.route('/add/', methods=['GET', 'POST'])
 def add():
     if request.method == 'POST':
-        name = request.form["name"]
+        if 'name' not in session:
+            flash('You need to be logged in to add details.', 'danger')
+            return redirect(url_for('login'))
+
+        username = request.form["name"]
         age = request.form["age"]
         mob = request.form["mob"]
+        mail = request.form["mail"]
 
         info = {
-            "Name" : name, "Age" : age, "Mob" : mob
+            "Name": username,
+            "Age": age,
+            "Mob": mob,
+            'Email': mail,
+            "Username": session['name'] 
         }
         collection.insert_one(info)
         return redirect(url_for('table'))
     return render_template('add.html')
 
-@app.route('/edit/<string:id>', methods = ['GET', 'POST'])
-def edit(id):
-    edit_dict = {}
-    if request.method == 'POST':
-        name = request.form['name']
-        age = request.form['age']
-        mob = request.form['mob']
 
-        edit_dict.update({"Name":name})
-        edit_dict.update({"Age" : age})
-        edit_dict.update({"Mob" : mob})               
-        
-        collection.update_one({"_id":ObjectId(id)},{"$set":{"Name":name,"Age":age, "Mob": mob}})
+@app.route('/edit/<string:id>', methods=['GET', 'POST'])
+def edit(id):
+    if 'name' not in session:
+        flash('You need to be logged in to edit details.', 'danger')
+        return redirect(url_for('login'))
+
+    username = session['name']
+    existing_data = collection.find_one({"_id": ObjectId(id), "Username": username})
+
+    if not existing_data:
+        flash('You are not authorized to edit this record.', 'danger')
         return redirect(url_for('table'))
-    existing_data = collection.find_one({"_id":ObjectId(id)})
-    return render_template('edit.html', data = existing_data)
+
+    if request.method == 'POST':
+        name = request.form.get('name')
+        age = request.form.get('age')
+        mob = request.form.get('mob')
+        mail = request.form.get('mail')
+
+        collection.update_one({"_id": ObjectId(id)}, {"$set": {"Name": name, "Age": age, "Mob": mob, 'Email': mail}})
+        flash('Details updated successfully.', 'success')
+        return redirect(url_for('table'))
+
+    return render_template('edit.html', data=existing_data)
+
 
 @app.route('/delete/<string:id>')
 def delete(id):
-    collection.delete_one({"_id":ObjectId(id)})
+
+    username = session['name']
+    existing_data = collection.find_one({"_id": ObjectId(id), "Username": username})
+
+    if not existing_data:
+        flash('You are not authorized to delete this record.', 'danger')
+        return redirect(url_for('table'))
+
+    collection.delete_one({"_id": ObjectId(id)})
     return redirect(url_for('table'))
+
 
 @app.route('/logout/')
 def logout():
     session.pop('name', None)
     flash('Logged out successfully', 'success')
     return redirect(url_for('login'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)

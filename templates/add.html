@@ -1,20 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    
-    <form action="" method="post">
-        <label for="name"> Name</label>
-        <input type="text" name="name" id="name"><br><br>
-        <label for="age"> Age</label>
-        <input type="number" name="age" id="age"><br><br>
-        <label for="mob">Mobile</label>
-        <input type="number" name="mob" id="mob"><br><br>
-        <input type="submit" value="Add">
+{% extends 'base.html' %}
+
+{% block title %}Add  Details{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h2>Add Details</h2>
+    <form action="{{ url_for('add') }}" method="post">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="age">Age</label>
+            <input type="number" class="form-control" id="age" name="age" required>
+        </div>
+        <div class="form-group">
+            <label for="mob">Mobile</label>
+            <input type="number" class="form-control" id="mob" name="mob" required>
+        </div>
+        <div class="form-group">
+            <label for="mail">Email</label>
+            <input type="text" class="form-control" id="mail" name="mail" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Add detail</button>
     </form>
-</body>
-</html>
+</div>
+{% endblock %}
